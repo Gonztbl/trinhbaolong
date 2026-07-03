@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trịnh Bảo Long | AI Engineer Portfolio</title>
+    <!-- Mạng nơ-ron, Robot & Công nghệ Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome cho Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        ai: {
+                            dark: '#050B14',
+                            card: 'rgba(17, 25, 40, 0.75)',
+                            primary: '#00F0FF', /* Cyan Neon */
+                            secondary: '#7000FF', /* Deep Purple */
+                            accent: '#FF003C'
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'morph': 'morph 8s ease-in-out infinite',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        morph: {
+                            '0%': { borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' },
+                            '50%': { borderRadius: '30% 60% 70% 40% / 50% 60% 30% 60%' },
+                            '100%': { borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px #00F0FF, 0 0 30px #00F0FF' },
+                            '100%': { boxShadow: '0 0 40px #7000FF, 0 0 60px #7000FF' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050B14;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: rgba(17, 25, 40, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0, 240, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #050B14;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00F0FF;
+        }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(to right, #00F0FF, #7000FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Morphing Image Container */
+        .morph-container {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(45deg, #00F0FF, #7000FF);
+            padding: 5px;
+            animation: morph 8s ease-in-out infinite, glow 4s ease-in-out infinite alternate;
+        }
+
+        .morph-inner {
+            width: 100%;
+            height: 100%;
+            background-color: #050B14;
+            background-image: url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop');
+            /* Hình ảnh Robot AI */
+            background-size: cover;
+            background-position: center;
+            animation: morph 8s ease-in-out infinite;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .morph-inner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 240, 255, 0.2);
+            mix-blend-mode: overlay;
+        }
+
+        /* Canvas Background */
+        #network-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-ai-primary selection:text-black">
+
+    <canvas id="network-canvas"></canvas>
+
+    <!-- Background Blobs -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-ai-secondary rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob">
+        </div>
+        <div
+            class="absolute top-[20%] right-[-10%] w-96 h-96 bg-ai-primary rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <nav class="fixed w-full z-50 glass border-b-0 border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0">
+                    <a href="#" class="font-mono text-2xl font-bold text-white tracking-tighter">
+                        <i class="fa-solid fa-microchip text-ai-primary mr-2"></i>TBL<span
+                            class="text-ai-primary">.ai</span>
+                    </a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#about"
+                            class="text-gray-300 hover:text-ai-primary transition px-3 py-2 rounded-md text-sm font-medium">Giới
+                            thiệu</a>
+                        <a href="#skills"
+                            class="text-gray-300 hover:text-ai-primary transition px-3 py-2 rounded-md text-sm font-medium">Kỹ
+                            năng</a>
+                        <a href="#experience"
+                            class="text-gray-300 hover:text-ai-primary transition px-3 py-2 rounded-md text-sm font-medium">Kinh
+                            nghiệm</a>
+                        <a href="#projects"
+                            class="text-gray-300 hover:text-ai-primary transition px-3 py-2 rounded-md text-sm font-medium">Dự
+                            án</a>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-4">
+                    <a href="https://github.com/Gonztbl" target="_blank"
+                        class="text-gray-400 hover:text-white transition"><i
+                            class="fa-brands fa-github text-xl"></i></a>
+                    <a href="https://linkedin.com/in/long-trinh-bảo" target="_blank"
+                        class="text-gray-400 hover:text-[#0077b5] transition"><i
+                            class="fa-brands fa-linkedin text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section id="about"
+        class="pt-32 pb-20 lg:pt-48 lg:pb-32 px-4 max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
+        <div class="w-full lg:w-1/2 space-y-6 text-center lg:text-left">
+            <div
+                class="inline-block px-4 py-1 rounded-full border border-ai-primary/30 bg-ai-primary/10 text-ai-primary font-mono text-sm mb-4">
+                <i class="fa-solid fa-robot mr-2"></i> Khởi tạo hệ thống...
+            </div>
+            <h1 class="text-5xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight">
+                Xin chào, tôi là <br>
+                <span class="text-gradient">Trịnh Bảo Long</span>
+            </h1>
+            <h2 class="text-2xl lg:text-3xl font-semibold text-gray-400 font-mono">
+                > <span class="text-white">AI Engineer</span>_
+            </h2>
+            <p class="text-gray-400 text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Kỹ sư Trí tuệ Nhân tạo đam mê xây dựng các hệ thống AI thực tiễn. Chuyên môn về Pipeline RAG,
+                Multi-Agent, Computer Vision và tích hợp mô hình AI vào các ứng dụng Full-stack.
+            </p>
+
+            <div class="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
+                <a href="mailto:longtrinh.28072004@gmail.com"
+                    class="px-8 py-3 rounded-full bg-ai-primary text-black font-semibold hover:bg-white transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.5)]">
+                    <i class="fa-solid fa-paper-plane"></i> Liên hệ ngay
+                </a>
+                <a href="#projects"
+                    class="px-8 py-3 rounded-full glass text-white font-semibold hover:bg-white/10 transition border border-white/20 flex items-center gap-2">
+                    <i class="fa-solid fa-code-branch"></i> Xem Dự án
+                </a>
+            </div>
+            <div class="pt-6 flex gap-6 text-sm text-gray-500 justify-center lg:justify-start font-mono">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-ai-primary"></i> Hà Nội,
+                    VN</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-phone text-ai-primary"></i>
+                    0365.838.906</span>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-1/2 flex justify-center lg:justify-end relative">
+            <!-- Hiệu ứng Morph AI -->
+            <div class="morph-container relative z-10">
+                <div class="morph-inner"></div>
+            </div>
+            <!-- Floating Tech Badges -->
+            <div class="absolute top-10 right-10 glass px-4 py-2 rounded-xl text-sm font-mono border-ai-primary/30 text-ai-primary animate-bounce"
+                style="animation-duration: 3s;">
+                PyTorch
+            </div>
+            <div class="absolute bottom-10 left-10 lg:left-20 glass px-4 py-2 rounded-xl text-sm font-mono border-ai-secondary/30 text-ai-secondary animate-bounce"
+                style="animation-duration: 4s; animation-delay: 1s;">
+                LLMs / RAG
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="py-20 bg-[#080d1a]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl lg:text-4xl font-bold text-center mb-16 text-white">
+                <i class="fa-solid fa-brain text-ai-secondary mr-3"></i>Năng Lực <span class="text-ai-primary">Công
+                    Nghệ</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Skill Card 1 -->
+                <div class="glass glass-card p-8 rounded-2xl">
+                    <div
+                        class="w-14 h-14 rounded-full bg-ai-secondary/20 flex items-center justify-center mb-6 text-ai-secondary text-2xl">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">AI & Machine Learning</h3>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Pipeline RAG & Vector Search</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Multi-Agent & Prompt Engineering</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Huấn luyện mô hình (XGBoost, YOLOv8)
+                        </li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Xử lý dữ liệu (SMOTE, Optuna)</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> ArcFace & ONNX Runtime</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> OpenAI / Gemini APIs</li>
+                    </ul>
+                </div>
+
+                <!-- Skill Card 2 -->
+                <div class="glass glass-card p-8 rounded-2xl">
+                    <div
+                        class="w-14 h-14 rounded-full bg-ai-primary/20 flex items-center justify-center mb-6 text-ai-primary text-2xl">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Database & Tools</h3>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Cloudflare Vectorize, Qdrant</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> MySQL, PostgreSQL</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Git / GitHub, Docker</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Vercel, Cloudflare Tunneling</li>
+                        <li><i class="fa-solid fa-check text-ai-primary mr-2"></i> Linux Mint / Terminal</li>
+                    </ul>
+                </div>
+
+                <!-- Skill Card 3 -->
+                <div class="glass glass-card p-8 rounded-2xl">
+                    <div
+                        class="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center mb-6 text-blue-400 text-2xl">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Languages</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">Python</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">Java</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">JavaScript</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">TypeScript</span>
+                    </div>
+                </div>
+
+                <!-- Skill Card 4 -->
+                <div class="glass glass-card p-8 rounded-2xl">
+                    <div
+                        class="w-14 h-14 rounded-full bg-yellow-500/20 flex items-center justify-center mb-6 text-yellow-400 text-2xl">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">Productivity & Agent</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">n8n AI Agent</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">ChatGPT / Gemini /
+                            Claude</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">Cursor IDE</span>
+                        <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-sm">GitHub Copilot</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+                <!-- Kinh nghiệm làm việc -->
+                <div>
+                    <h2 class="text-3xl font-bold mb-10 text-white flex items-center">
+                        <i class="fa-solid fa-briefcase text-ai-primary mr-3"></i> Kinh Nghiệm Thực Tế
+                    </h2>
+                    <div class="relative border-l border-white/20 ml-4 space-y-10">
+
+                        <!-- IART HOLDING -->
+                        <div class="relative pl-8">
+                            <div
+                                class="absolute w-4 h-4 bg-ai-primary rounded-full -left-[8.5px] top-1 shadow-[0_0_10px_#00F0FF]">
+                            </div>
+                            <div
+                                class="glass p-6 rounded-xl border border-white/10 hover:border-ai-primary/50 transition">
+                                <span class="text-ai-primary font-mono text-sm mb-2 block">08/2025 - 11/2025</span>
+                                <h3 class="text-xl font-bold text-white">Kỹ Sư Ứng Dụng AI</h3>
+                                <h4 class="text-gray-400 mb-4">IART HOLDING</h4>
+                                <ul class="list-disc list-inside text-gray-400 text-sm space-y-2">
+                                    <li>Xây dựng Chatbot Messenger (Aigent RAG) tích hợp Meta API. Cấu hình Multi-Agent
+                                        qua n8n giải quyết nghiệp vụ tư vấn thực tế.</li>
+                                    <li>Tự động hóa đăng bài Social Media: Dùng n8n và Generative AI sinh caption/ảnh từ
+                                        ý tưởng gốc, đăng tự động lên FB, Insta, Zalo, Telegram.</li>
+                                    <li>Phát triển tool bot n8n crawl tin tức, ứng dụng LLM viết lại nội dung, tạo ảnh
+                                        và đăng wordpress tự động.</li>
+                                    <li>Xây dựng hệ thống sinh ảnh hàng loạt và API tool check image cho thiết kế in ấn.
+                                    </li>
+                                </ul>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <span class="text-xs px-2 py-1 bg-white/5 rounded text-gray-300">Python</span>
+                                    <span class="text-xs px-2 py-1 bg-white/5 rounded text-gray-300">FastAPI</span>
+                                    <span class="text-xs px-2 py-1 bg-white/5 rounded text-gray-300">LangChain</span>
+                                    <span class="text-xs px-2 py-1 bg-white/5 rounded text-gray-300">n8n</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VTI Education -->
+                        <div class="relative pl-8">
+                            <div
+                                class="absolute w-4 h-4 bg-ai-secondary rounded-full -left-[8.5px] top-1 shadow-[0_0_10px_#7000FF]">
+                            </div>
+                            <div class="glass p-6 rounded-xl border border-white/10">
+                                <span class="text-ai-secondary font-mono text-sm mb-2 block">02/2025 - 04/2026</span>
+                                <h3 class="text-xl font-bold text-white">Thực Tập Sinh Java Full-stack</h3>
+                                <h4 class="text-gray-400 mb-4">VTI Education</h4>
+                                <ul class="list-disc list-inside text-gray-400 text-sm space-y-2">
+                                    <li>Hoàn thành xuất sắc chương trình đào tạo và đạt Chứng chỉ Java Full-stack (Học
+                                        bổng toàn phần).</li>
+                                    <li>Thiết kế, tối ưu hệ thống cơ sở dữ liệu MySQL/PostgreSQL giảm thời gian truy
+                                        vấn.</li>
+                                    <li>Xây dựng RESTful API đạt chuẩn bằng Spring Boot. Phối hợp Agile/Scrum & Git.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Học Vấn & Chứng Chỉ -->
+                <div>
+                    <h2 class="text-3xl font-bold mb-10 text-white flex items-center">
+                        <i class="fa-solid fa-graduation-cap text-ai-secondary mr-3"></i> Học Vấn & Chứng Chỉ
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="glass p-6 rounded-xl border-l-4 border-ai-primary">
+                            <h3 class="text-lg font-bold text-white">Cử nhân Khoa học Máy tính</h3>
+                            <p class="text-ai-primary text-sm mb-2 font-mono">Đại Học Công Nghiệp Hà Nội (HaUI) | 2022 -
+                                2026</p>
+                            <p class="text-gray-400 text-sm"><i class="fa-solid fa-award text-yellow-500 mr-1"></i> Học
+                                bổng toàn phần kì 1 năm 3 chuyên ngành KHMT.</p>
+                            <p class="text-gray-400 text-sm"><i class="fa-solid fa-award text-yellow-500 mr-1"></i> Học
+                                bổng ươm mầm xanh HAUI-VTI 2025.</p>
+                        </div>
+
+                        <div class="glass p-6 rounded-xl border-l-4 border-ai-secondary">
+                            <h3 class="text-lg font-bold text-white">Chứng Chỉ Chuyên Ngành</h3>
+                            <ul class="list-none text-gray-400 text-sm space-y-2 mt-2">
+                                <li><i class="fa-solid fa-certificate text-white/50 mr-2"></i> Chứng chỉ Java Full-stack
+                                    (VTI Education)</li>
+                                <li><i class="fa-solid fa-certificate text-white/50 mr-2"></i> Chứng chỉ Big Data
+                                    (Samsung Innovation Campus)</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass p-6 rounded-xl border-l-4 border-blue-500">
+                            <h3 class="text-lg font-bold text-white">Google Coursera</h3>
+                            <ul class="list-none text-gray-400 text-sm space-y-2 mt-2">
+                                <li><i class="fa-brands fa-google text-white/50 mr-2"></i> Foundations of Data Science
+                                </li>
+                                <li><i class="fa-brands fa-google text-white/50 mr-2"></i> Foundations of Project
+                                    Management</li>
+                                <li><i class="fa-brands fa-google text-white/50 mr-2"></i> Technical Support
+                                    Fundamentals</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="py-20 bg-[#080d1a]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">
+                    Dự Án <span class="text-gradient">Tiêu Biểu</span>
+                </h2>
+                <p class="text-gray-400 max-w-2xl mx-auto font-mono text-sm">> Exploring the intersection of AI, Data,
+                    and Full-stack.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- Project 1: Agent RAG Chat Bot -->
+                <div class="glass glass-card rounded-2xl overflow-hidden flex flex-col h-full">
+                    <div class="h-48 relative overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop"
+                            alt="AI Chatbot"
+                            class="w-full h-full object-cover transition transform group-hover:scale-110 duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B0F19] to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 flex gap-2">
+                            <span
+                                class="bg-ai-primary/20 text-ai-primary border border-ai-primary/50 text-xs px-2 py-1 rounded backdrop-blur-md">Cloudflare</span>
+                            <span
+                                class="bg-ai-secondary/20 text-white border border-ai-secondary/50 text-xs px-2 py-1 rounded backdrop-blur-md">Llama
+                                3.3</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold text-white mb-2">Agent RAG Chat Bot</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Chatbot Facebook Messenger ứng dụng RAG trên
+                            Edge Computing. Sử dụng HyDE, Multi-Strategy Retrieval, Self-Evaluation Agent và Multi-LLM
+                            Fallback (Groq/Cloudflare AI).</p>
+                        <div class="flex items-center gap-4 mt-auto pt-4 border-t border-white/10">
+                            <a href="https://github.com/Gonztbl/ChatMessFB" target="_blank"
+                                class="text-gray-300 hover:text-ai-primary transition text-sm flex items-center gap-2"><i
+                                    class="fa-brands fa-github"></i> GitHub</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2: SmartPay E-Wallet -->
+                <div class="glass glass-card rounded-2xl overflow-hidden flex flex-col h-full">
+                    <div class="h-48 relative overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=800&auto=format&fit=crop"
+                            alt="E-Wallet AI"
+                            class="w-full h-full object-cover transition transform group-hover:scale-110 duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B0F19] to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 flex gap-2">
+                            <span
+                                class="bg-blue-500/20 text-blue-300 border border-blue-500/50 text-xs px-2 py-1 rounded backdrop-blur-md">React
+                                & Java</span>
+                            <span
+                                class="bg-ai-primary/20 text-ai-primary border border-ai-primary/50 text-xs px-2 py-1 rounded backdrop-blur-md">XGBoost
+                                & ONNX</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold text-white mb-2">Ví Điện Tử Tích Hợp AI</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Kiến trúc Full-stack (React/Spring Boot). Tích
+                            hợp Machine Learning (XGBoost) phát hiện gian lận, ArcFace bảo mật sinh trắc học và Agent
+                            RAG hỗ trợ khách hàng đa lượt.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-white/10">
+                            <a href="https://smartpayio.traidep.site" target="_blank"
+                                class="text-ai-primary hover:text-white transition text-sm flex items-center gap-2"><i
+                                    class="fa-solid fa-link"></i> Live Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3: Fruit Ripeness CV -->
+                <div class="glass glass-card rounded-2xl overflow-hidden flex flex-col h-full">
+                    <div class="h-48 relative overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&auto=format&fit=crop"
+                            alt="Computer Vision"
+                            class="w-full h-full object-cover transition transform group-hover:scale-110 duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B0F19] to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 flex gap-2">
+                            <span
+                                class="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 text-xs px-2 py-1 rounded backdrop-blur-md">YOLOv8</span>
+                            <span
+                                class="bg-red-500/20 text-red-300 border border-red-500/50 text-xs px-2 py-1 rounded backdrop-blur-md">PyTorch</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold text-white mb-2">Fruit Ripeness CV System</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Hệ thống Computer Vision nhận diện, phân loại
+                            trái cây (Loại, Tươi/Hỏng, Xanh/Chín). Pipeline đa tầng kết hợp YOLOv8n, CNN, MobileNetV2.
+                            Giao diện Flask web.</p>
+                        <div class="flex items-center gap-4 mt-auto pt-4 border-t border-white/10">
+                            <a href="https://github.com/Gonztbl/WEBAI" target="_blank"
+                                class="text-gray-300 hover:text-ai-primary transition text-sm flex items-center gap-2"><i
+                                    class="fa-brands fa-github"></i> GitHub</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4: E-Commerce AI -->
+                <div
+                    class="glass glass-card rounded-2xl overflow-hidden flex flex-col h-full md:col-span-2 lg:col-span-1">
+                    <div class="h-48 relative overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800&auto=format&fit=crop"
+                            alt="E-Commerce AI"
+                            class="w-full h-full object-cover transition transform group-hover:scale-110 duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B0F19] to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 flex gap-2">
+                            <span
+                                class="bg-green-500/20 text-green-300 border border-green-500/50 text-xs px-2 py-1 rounded backdrop-blur-md">Django</span>
+                            <span
+                                class="bg-ai-primary/20 text-ai-primary border border-ai-primary/50 text-xs px-2 py-1 rounded backdrop-blur-md">Gemini
+                                RAG</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold text-white mb-2">E-Commerce Platform with AI</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Nền tảng TMĐT full-stack bằng Django, tích hợp
+                            PayOS VietQR webhook. Phát triển chatbot tư vấn sản phẩm dùng Google Gemini RAG dựa trên
+                            data thực tế.</p>
+                        <div class="flex items-center justify-between mt-auto pt-4 border-t border-white/10">
+                            <a href="https://longtapcode.pythonanywhere.com/" target="_blank"
+                                class="text-ai-primary hover:text-white transition text-sm flex items-center gap-2"><i
+                                    class="fa-solid fa-link"></i> Live Demo</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Project 5: Booking Hotel -->
+                <div
+                    class="glass glass-card rounded-2xl overflow-hidden flex flex-col h-full md:col-span-2 lg:col-span-2">
+                    <div class="p-6 flex-grow flex flex-col justify-center">
+                        <h3 class="text-xl font-bold text-white mb-2"><i
+                                class="fa-solid fa-hotel text-ai-secondary mr-2"></i> Booking Hotel Fullstack</h3>
+                        <p class="text-gray-400 text-sm mb-4">Hệ thống đặt phòng khách sạn sử dụng Django và SQL Server,
+                            quản lý phức tạp nhiều thực thể. Tích hợp thanh toán PayOS đảm bảo transaction atomicity.
+                        </p>
+                        <div class="flex gap-2 mb-4">
+                            <span
+                                class="bg-white/5 border border-white/10 text-xs px-2 py-1 rounded text-gray-300">Python</span>
+                            <span
+                                class="bg-white/5 border border-white/10 text-xs px-2 py-1 rounded text-gray-300">Django
+                                5</span>
+                            <span class="bg-white/5 border border-white/10 text-xs px-2 py-1 rounded text-gray-300">SQL
+                                Server</span>
+                        </div>
+                        <div class="flex items-center gap-4 mt-auto pt-4 border-t border-white/10">
+                            <a href="https://booking-hotel-django.onrender.com" target="_blank"
+                                class="text-ai-primary hover:text-white transition text-sm flex items-center gap-2"><i
+                                    class="fa-solid fa-link"></i> Live Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-[#03060a] py-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+            <p class="text-gray-500 text-sm mb-4 md:mb-0">
+                &copy; 2026 Trịnh Bảo Long. Thiết kế tối ưu cho AI & Technology.
+            </p>
+            <div class="flex space-x-6 text-gray-400">
+                <a href="mailto:longtrinh.28072004@gmail.com" class="hover:text-ai-primary transition"><i
+                        class="fa-solid fa-envelope text-xl"></i></a>
+                <a href="https://github.com/Gonztbl" class="hover:text-white transition"><i
+                        class="fa-brands fa-github text-xl"></i></a>
+                <a href="https://linkedin.com/in/long-trinh-bảo" class="hover:text-[#0077b5] transition"><i
+                        class="fa-brands fa-linkedin text-xl"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript cho hiệu ứng Neural Network Background -->
+    <script>
+        const canvas = document.getElementById('network-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let particlesArray;
+
+        // Xử lý resize
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', function () {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        });
+
+        // Tạo Particle
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            // Vẽ particle
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = '#00F0FF';
+                ctx.fill();
+            }
+            // Update vị trí
+            update() {
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        // Khởi tạo mảng particle
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 15000;
+            // Giới hạn số lượng cho mobile để tăng hiệu năng
+            if (window.innerWidth < 768) numberOfParticles = 30;
+
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 1) - 0.5;
+                let directionY = (Math.random() * 1) - 0.5;
+                let color = '#00F0FF';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Animation Loop và vẽ đường nối (Neural Network)
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        // Kết nối các điểm gần nhau
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                        + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+
+                    if (distance < (canvas.width / 10) * (canvas.height / 10)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(0, 240, 255,' + opacityValue + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Bắt đầu
+        init();
+        animate();
+    </script>
+</body>
+
+</html>
